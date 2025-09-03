@@ -10,10 +10,6 @@ Results at a glance
 
 
 
-(Images assume you copy a few PNGs from outputs/ into a folder named figures/ so they can render on GitHub.)
-
-
-
 <p align="center"> <img src="figures/equity\_vs\_riskfree.png" width="48%" /> <img src="figures/rolling\_sharpe.png" width="48%" /> </p> <p align="center"> <img src="figures/constraint\_binding\_summary.png" width="48%" /> <img src="figures/mom\_decile\_equity\_gap30\_lb126.png" width="48%" /> </p> <p align="center"> <img src="figures/sl\_mr\_ic\_ir\_heatmap.png" width="48%" /> </p>
 
 

@@ -8,9 +8,12 @@ Cross-sectional equity research pipeline: momentum and short-horizon mean-revers
 
 Results at a glance
 
+![Equity vs risk-free](figures/equity_vs_riskfree.png)  
+![Rolling Sharpe](figures/rolling_sharpe.png)  
+![Constraint binding](figures/constraint_binding_summary.png)  
+![Momentum decile L/S](figures/mom_decile_equity_gap30_lb126.png)  
+![MR IC/IR heatmap](figures/sl_mr_ic_ir_heatmap.png)  
 
-
-<p align="center"> <img src="figures/equity\_vs\_riskfree.png" width="48%" /> <img src="figures/rolling\_sharpe.png" width="48%" /> </p> <p align="center"> <img src="figures/constraint\_binding\_summary.png" width="48%" /> <img src="figures/mom\_decile\_equity\_gap30\_lb126.png" width="48%" /> </p> <p align="center"> <img src="figures/sl\_mr\_ic\_ir\_heatmap.png" width="48%" /> </p>
 
 
 

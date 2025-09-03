@@ -1,0 +1,11 @@
+pandas
+numpy
+scipy
+matplotlib
+cvxpy
+osqp
+scs
+clarabel
+scikit-learn
+yfinance
+tqdm

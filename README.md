@@ -20,7 +20,7 @@ Cross-sectional equity research and portfolio backtesting pipeline in Python—b
 ## 1. Key features
 **End-to-end research pipeline:** Data → Signals → Risk model → Optimizer → Backtest → Reports.  
 
-### Signals (selected via 'MODE' in `projects/alpha_run/config/py`)  
+### Signals (selected via 'MODE' in `projects/alpha_run/config.py`)  
 `momentum` — 12–1 with a 1-month gap.  
 `mean_reversion` — cross-sectional mean-reversion on market-residual returns.  
 `combo` — weighted blend of momentum and mean-reversion.  
@@ -34,7 +34,17 @@ sample covariance; EWMA covariance (configurable λ); Ledoit–Wolf shrinkage; P
 <br>
 
 ### Portfolio construction (cvxpy mean–variance)
-maximize μᵀw − γ·wᵀΣw with optional constraints (all opt-in): dollar-neutral vs long-only, per-name bounds, gross exposure cap, market-beta limit, sector neutrality, and factor neutrality (including PCA neutrality via loadings from the risk model). Turnover gating and transaction-cost modeling (bps with benefit buffer) are supported.  
+maximize μᵀw − γ·wᵀΣw with optional constraints (all opt-in): dollar-neutral vs long-only, per-name bounds, gross exposure cap, market-beta limit, sector neutrality, and factor neutrality (including PCA neutrality via loadings from the risk model). Turnover gating and transaction-cost modeling (bps with benefit buffer) are supported.
+#### PCA-factor neutrality (risk-model derived)
+On each training window we estimate the return-covariance $\Sigma_t$ of the universe and compute its eigendecomposition $\Sigma_t = V_t \Lambda_t V_t^\top$. Let $V_{t,k}$ denote the first $k$ columns of $V_t$ (the top $k$ principal components). Neutrality removes exposure to these covariance-driven factors by imposing
+
+$$
+V_{t,k}^\top w_t = \mathbf{0} \quad \text{(hard neutrality)} 
+\qquad \text{or} \qquad 
+\lvert V_{t,k}^\top w_t \rvert \le \phi \ \text{(capped)}.
+$$
+
+This is PCA on returns–covariance (risk), not PCA on features. The number of PCs $k$ and whether neutrality is hard or capped are set in the config (e.g., `factor_neutral=True`, optional `pca_n_components`, and an exposure cap if used).  
 <br>
 
 ### Backtesting
@@ -73,12 +83,8 @@ Trading calendars are intersected across all tickers and benchmarks; symbols wit
 Missing observations are not forward-filled for signal estimation.  
 <br>
 
-### Sector / factor metadata  
+### Sector metadata  
 A simple, editable sector map is provided for sector neutrality and attribution.
-
-When factor neutrality uses `PCA`, loadings are computed from the chosen risk model on the training window.
-
-Look-ahead prevention. All signals and risk estimates are computed on rolling windows that end before each rebalance date. Early periods may be skipped until sufficient history accumulates (warm-up).
 <br>
 
 ### Caveats & biases
@@ -89,9 +95,11 @@ Look-ahead prevention. All signals and risk estimates are computed on rolling wi
 We report after-cost performance over Jan 2020–Jul 2025 with a monthly rebalance (64 periods).  
 
 **Figure 1** shows cumulative equity vs risk-free investment (`BIL`). We report Net Asset Value (NAV) as the cumulative product of portfolio returns,
+
 $$
-NAV_t = NAV_{t-1} (r_{p,t})
+\mathrm{NAV}_t=\mathrm{NAV}_{t-1}\,\bigl(1+r_{p,t}\bigr),\qquad \mathrm{NAV}_0=1 .
 $$
+
 with $NAV_0$=1, where $r_{p,t}$ is the after-cost portfolio return in period *t*. The equity curve is flat through 2020–early 2021 (warm-up while sufficient history accrues), rises in mid-2021, retraces in late-2021 and late-2022 (leadership rotation and compressed cross-sectional dispersion), accelerates in late 2024–spring 2025, and pulls back in mid-2025.
 
 ![Equity vs risk-free](figures/equity_vs_riskfree.png)
@@ -99,8 +107,9 @@ with $NAV_0$=1, where $r_{p,t}$ is the after-cost portfolio return in period *t*
 <br>
 
 **Figure 2** shows peak-to-trough drawdowns over time. Drawdown at time *t* is
+
 $$
-D_t \;=\; 1 - \frac{\mathrm{NAV}_t}{\max_{0 \le s \le t}\,\mathrm{NAV}_s}
+D_t = 1 - \frac{\mathrm{NAV}_t}{\max_{0 \le s \le t}\,\mathrm{NAV}_s}\,.
 $$
 
 where *s* indexes all past periods up to *t*. Two episodes dominate the sample: late-2022 → early-2023, reaching about −12.5%, and May–July 2025, about −11.5% by the sample end (July 2025). The first follows a leadership (factor) rotation and compressed cross-sectional dispersion, during which ranks reshuffle and momentum reverses; the second follows a strong run in Q4-2024 → April-2025 and reflects mean-reversion of prior gains. In both cases, risk controls—monthly cadence, turnover/cost gating, and exposure caps (gross and market-beta)—contain tail risk but slow re-risking, extending time to recovery.
@@ -110,11 +119,14 @@ where *s* indexes all past periods up to *t*. Two episodes dominate the sample: 
 <br>
 
 **Figure 3** shows the 12-month rolling Sharpe ratio of excess returns, where excess return is the portfolio return minus the risk-free return (BIL) on the same month. For each month *t*, the statistic is computed over the previous 12 monthly observations as the average excess return divided by its standard deviation, then annualized by $\sqrt{12}$
+
 $$
 \text{Sharpe}^{(12\text{m})}_t
-= \dfrac{\text{average}_{12\text{m}}(r_p - r_f)}
-{\text{st.dev.}_{12\text{m}}(r_p - r_f)} \sqrt{12}
+= \frac{\overline{r^{\text{excess}}}_{\;12\text{m}}}
+{\operatorname{Std}_{\;12\text{m}}\!\bigl(r^{\text{excess}}\bigr)} \,\sqrt{12}\,,
+\quad r^{\text{excess}}_t = r_{p,t}-r_{f,t}.
 $$
+
 ![Rolling Sharpe](figures/rolling_sharpe.png)  
 *Figure 3. Rolling (12-month) Sharpe ratio of portfolio excess returns.*  
 <br>
@@ -125,7 +137,7 @@ $$
 *Figure 4. Binding metrics over monthly rebalances (T = 64).*  
 <br>
 
-**Figure 5** shows cumulative NAV for three variants. Here, baseline means: monthly rebalance; `MODE = momentum (12–1)`; PCA neutrality ON (loadings estimated on the training window); mean-reversion overlay ON; other settings as in the run’s run_config.json. B removes PCA neutrality (everything else unchanged). C removes the overlay (pure momentum). The curves track closely in 2020–2022, diverge through 2024–2025 with the baseline maintaining a persistent spread, and compress during the mid-2025 pullback.
+**Figure 5** shows cumulative NAV for three variants. Baseline, **A**, uses monthly rebalance; `MODE = momentum (12–1)`; PCA-factor neutrality computed from the training-window return-covariance (neutralize exposure to the top *k* PCs, i.e., $V_{t,k}^\top w_t = \mathbf{0}$); and mean-reversion overlay; other settings as in the run’s run_config.json. **B** removes PCA neutrality (everything else unchanged). **C** removes the overlay (pure momentum). The curves track closely in 2020–2022, diverge through 2024–2025 with the baseline maintaining a persistent spread, and compress during the mid-2025 pullback.
 
 ![A/B testing](figures/equity_ab.png) 
 *Figure 5. Equity curves for three variants: A (baseline: momentum 12–1, PCA neutrality ON, overlay ON), B (no PCA neutrality), C (no overlay).*  

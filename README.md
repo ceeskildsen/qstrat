@@ -38,7 +38,7 @@ sample covariance; EWMA covariance (configurable λ); Ledoit–Wolf shrinkage; P
 The portfolio at each rebalance is found by solving a **mean–variance program**:
 
 $$
-\max_{w \in \mathbb{R}^N} \; \mu^\top w \;-\; \gamma \, w^\top \Sigma w
+\max_{w \in \mathbb{R}^N} \mu^\top w - \gamma w^\top \Sigma w
 $$
 
 where  
@@ -55,7 +55,7 @@ where
 **Gross exposure cap**
 
 $$
-\sum_{i=1}^N |w_i| \;\le\; G
+\sum_{i=1}^N \lvert w_i \rvert \le G
 $$
 
 ---
@@ -63,7 +63,7 @@ $$
 **Market-beta limit**
 
 $$
-|\beta^\top w| \;\le\; \beta_{\max}
+\lvert \beta^\top w \rvert \le \beta_{\max}
 $$
 
 ---
@@ -71,7 +71,7 @@ $$
 **Per-name bounds**
 
 $$
-l_i \;\le\; w_i \;\le\; u_i \quad \text{for all } i
+l_i \le w_i \le u_i \qquad \text{for all } i
 $$
 
 ---
@@ -99,7 +99,7 @@ $$
 Capped neutrality:
 
 $$
-|V_{t,k}^\top w| \;\le\; \phi
+\lvert V_{t,k}^\top w \rvert \le \phi
 $$
 
 ---
@@ -166,7 +166,7 @@ We report after-cost performance over Jan 2020–Jul 2025 with a monthly rebalan
 **Figure 1** shows cumulative equity vs risk-free investment (`BIL`). We report Net Asset Value (NAV) as the cumulative product of portfolio returns,
 
 $$
-\mathrm{NAV}_t=\mathrm{NAV}_{t-1}\,\bigl(1+r_{p,t}\bigr),\qquad \mathrm{NAV}_0=1 .
+\mathrm{NAV}_t = \mathrm{NAV}_{t-1}(1 + r_{p,t}), \qquad \mathrm{NAV}_0 = 1
 $$
 
 with $NAV_0$=1, where $r_{p,t}$ is the after-cost portfolio return in period *t*. The equity curve is flat through 2020–early 2021 (warm-up while sufficient history accrues), rises in mid-2021, retraces in late-2021 and late-2022 (leadership rotation and compressed cross-sectional dispersion), accelerates in late 2024–spring 2025, and pulls back in mid-2025.
@@ -178,7 +178,7 @@ with $NAV_0$=1, where $r_{p,t}$ is the after-cost portfolio return in period *t*
 **Figure 2** shows peak-to-trough drawdowns over time. Drawdown at time *t* is
 
 $$
-D_t = 1 - \frac{\mathrm{NAV}_t}{\max_{0 \le s \le t}\,\mathrm{NAV}_s}\,.
+D_t = 1 - \frac{\mathrm{NAV}_t}{\max_{0 \le s \le t} \mathrm{NAV}_s}
 $$
 
 where *s* indexes all past periods up to *t*. Two episodes dominate the sample: late-2022 → early-2023, reaching about −12.5%, and May–July 2025, about −11.5% by the sample end (July 2025). The first follows a leadership (factor) rotation and compressed cross-sectional dispersion, during which ranks reshuffle and momentum reverses; the second follows a strong run in Q4-2024 → April-2025 and reflects mean-reversion of prior gains. In both cases, risk controls—monthly cadence, turnover/cost gating, and exposure caps (gross and market-beta)—contain tail risk but slow re-risking, extending time to recovery.
@@ -190,9 +190,8 @@ where *s* indexes all past periods up to *t*. Two episodes dominate the sample: 
 **Figure 3** shows the 12-month rolling Sharpe ratio of excess returns, where excess return is the portfolio return minus the risk-free return (BIL) on the same month. For each month *t*, the statistic is computed over the previous 12 monthly observations as the average excess return divided by its standard deviation, then annualized by $\sqrt{12}$
 
 $$
-\mathrm{Sharpe}^{(12\mathrm{m})}_t
-= \frac{\overline{r^{\mathrm{excess}}}_{\,12\mathrm{m}}}
-{\sigma^{(12\mathrm{m})}_t}\,\sqrt{12},
+\operatorname{Sharpe}^{(12\mathrm{m})}_t
+= \frac{\overline{r^{\mathrm{excess}}}_{t,12\mathrm{m}}}{\sigma_{t,12\mathrm{m}}}\,\sqrt{12},
 \qquad r^{\mathrm{excess}}_t = r_{p,t} - r_{f,t}.
 $$
 

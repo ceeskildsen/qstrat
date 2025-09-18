@@ -48,6 +48,8 @@ where
 - $\Sigma$ = return covariance matrix (estimated on training window)  
 - $\gamma$ = risk-aversion parameter  
 
+---
+
 ### Constraint definitions
 
 **Gross exposure cap**
@@ -56,11 +58,15 @@ $$
 \sum_{i=1}^N |w_i| \;\le\; G
 $$
 
+---
+
 **Market-beta limit**
 
 $$
 |\beta^\top w| \;\le\; \beta_{\max}
 $$
+
+---
 
 **Per-name bounds**
 
@@ -68,31 +74,41 @@ $$
 l_i \;\le\; w_i \;\le\; u_i \quad \text{for all } i
 $$
 
+---
+
 **Sector neutrality**
 
 $$
 S w = \mathbf{0}
 $$
 
+---
+
 **PCA-factor neutrality (risk-model derived)**
 
 On each training window we decompose the return covariance  
 $\Sigma_t = V_t \Lambda_t V_t^\top$ and take the top $k$ eigenvectors $V_{t,k}$.  
-Neutrality removes exposure to these covariance-driven factors:
+Neutrality removes exposure to these covariance-driven factors.
+
+Hard neutrality:
 
 $$
-V_{t,k}^\top w = \mathbf{0} \quad \text{(hard)}
+V_{t,k}^\top w = \mathbf{0}
 $$
 
-or
+Capped neutrality:
 
 $$
-|V_{t,k}^\top w| \;\le\; \phi \quad \text{(capped)} .
+|V_{t,k}^\top w| \;\le\; \phi
 $$
+
+---
 
 **Turnover / cost gate**
 
-A trade is executed only if expected benefit exceeds modeled transaction costs by a buffer.
+A trade is executed only if expected benefit exceeds modeled transaction costs by a buffer,  
+to prevent churn from small rebalances.
+
 
 ---
 

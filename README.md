@@ -38,65 +38,61 @@ sample covariance; EWMA covariance (configurable λ); Ledoit–Wolf shrinkage; P
 The portfolio at each rebalance is found by solving a **mean–variance program**:
 
 $$
-\max_{w \in \mathbb{R}^N} \; \mu^\top w \;-\; \gamma\, w^\top \Sigma\, w ,
+\max_{w \in \mathbb{R}^N} \; \mu^\top w \;-\; \gamma \, w^\top \Sigma w
 $$
 
 where  
 
-- $N$ = number of assets in the universe  
-- $w \in \mathbb{R}^N$ = portfolio **weight vector**, $w_i$ is the fraction of capital in asset $i$  
-  (positive = long, negative = short; $\sum_i w_i = 1$ if fully invested)  
-- $\mu \in \mathbb{R}^N$ = expected return vector (signal)  
-- $\Sigma \in \mathbb{R}^{N \times N}$ = covariance matrix of returns estimated on the training window  
+- $w \in \mathbb{R}^N$ = portfolio weights ($w_i$ = fraction of capital in asset $i$; positive = long, negative = short)  
+- $\mu$ = expected return vector (signal)  
+- $\Sigma$ = return covariance matrix (estimated on training window)  
 - $\gamma$ = risk-aversion parameter  
 
 ### Constraint definitions
 
-All constraints are **opt-in** via the config file. Symbols used below:
+**Gross exposure cap**
 
-- $G$ = gross exposure cap  
-- $\beta \in \mathbb{R}^N$ = single-asset betas vs market proxy  
-- $\beta_{\max}$ = max allowed absolute portfolio beta  
-- $l_i, u_i$ = lower/upper bound on asset $i$  
-- $S \in \{0,1\}^{K \times N}$ = sector-membership matrix  
-- $\Sigma_t$ = return covariance matrix at rebalance $t$  
-- $V_{t,k} \in \mathbb{R}^{N \times k}$ = top $k$ eigenvectors of $\Sigma_t$  
-- $\phi$ = cap on PCA-factor exposures  
-
-**Gross exposure cap**  
 $$
 \sum_{i=1}^N |w_i| \;\le\; G
 $$
-Prevents leverage from exceeding a fixed multiple of capital.
 
-**Market-beta limit**  
+**Market-beta limit**
+
 $$
 |\beta^\top w| \;\le\; \beta_{\max}
 $$
-Caps the portfolio’s absolute beta relative to the market proxy.
 
-**Per-name bounds**  
-$$
-l_i \;\le\; w_i \;\le\; u_i, \quad \text{for all } i
-$$
-Restricts position size in each asset.
+**Per-name bounds**
 
-**Sector neutrality**  
+$$
+l_i \;\le\; w_i \;\le\; u_i \quad \text{for all } i
+$$
+
+**Sector neutrality**
+
 $$
 S w = \mathbf{0}
 $$
-Enforces no net sector tilt (or capped neutrality if limits are set).
 
-**PCA-factor neutrality (risk-model derived)**  
-On each training window we decompose the return-covariance $\Sigma_t = V_t \Lambda_t V_t^\top$ and take the top $k$ eigenvectors $V_{t,k}$. Neutrality removes exposure to these covariance-driven factors:
+**PCA-factor neutrality (risk-model derived)**
+
+On each training window we decompose the return covariance  
+$\Sigma_t = V_t \Lambda_t V_t^\top$ and take the top $k$ eigenvectors $V_{t,k}$.  
+Neutrality removes exposure to these covariance-driven factors:
+
 $$
-V_{t,k}^\top w = \mathbf{0} \quad \text{(hard)} 
-\qquad \text{or} \qquad 
-|V_{t,k}^\top w| \le \phi \quad \text{(capped)} .
+V_{t,k}^\top w = \mathbf{0} \quad \text{(hard)}
 $$
 
-**Turnover / cost gate**  
-A trade is executed only if expected benefit exceeds modeled transaction costs by a buffer, to prevent churn from small rebalances.
+or
+
+$$
+|V_{t,k}^\top w| \;\le\; \phi \quad \text{(capped)} .
+$$
+
+**Turnover / cost gate**
+
+A trade is executed only if expected benefit exceeds modeled transaction costs by a buffer.
 
 ---
 
@@ -156,7 +152,6 @@ We report after-cost performance over Jan 2020–Jul 2025 with a monthly rebalan
 $$
 \mathrm{NAV}_t=\mathrm{NAV}_{t-1}\,\bigl(1+r_{p,t}\bigr),\qquad \mathrm{NAV}_0=1 .
 $$
-<br>
 
 with $NAV_0$=1, where $r_{p,t}$ is the after-cost portfolio return in period *t*. The equity curve is flat through 2020–early 2021 (warm-up while sufficient history accrues), rises in mid-2021, retraces in late-2021 and late-2022 (leadership rotation and compressed cross-sectional dispersion), accelerates in late 2024–spring 2025, and pulls back in mid-2025.
 

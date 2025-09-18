@@ -33,18 +33,75 @@ Cross-sectional equity research and portfolio backtesting pipeline in Python—b
 sample covariance; EWMA covariance (configurable λ); Ledoit–Wolf shrinkage; PSD-repair guards.  
 <br>
 
-### Portfolio construction (cvxpy mean–variance)
-maximize μᵀw − γ·wᵀΣw with optional constraints (all opt-in): dollar-neutral vs long-only, per-name bounds, gross exposure cap, market-beta limit, sector neutrality, and factor neutrality (including PCA neutrality via loadings from the risk model). Turnover gating and transaction-cost modeling (bps with benefit buffer) are supported.
-#### PCA-factor neutrality (risk-model derived)
-On each training window we estimate the return-covariance $\Sigma_t$ of the universe and compute its eigendecomposition $\Sigma_t = V_t \Lambda_t V_t^\top$. Let $V_{t,k}$ denote the first $k$ columns of $V_t$ (the top $k$ principal components). Neutrality removes exposure to these covariance-driven factors by imposing
+## Portfolio construction (cvxpy mean–variance)
+
+The portfolio at each rebalance is found by solving a **mean–variance program**:
 
 $$
-V_{t,k}^\top w_t = \mathbf{0} \quad \text{(hard neutrality)} 
+\max_{w \in \mathbb{R}^N} \; \mu^\top w \;-\; \gamma\, w^\top \Sigma\, w ,
+$$
+
+where  
+
+- $N$ = number of assets in the universe  
+- $w \in \mathbb{R}^N$ = portfolio **weight vector**, $w_i$ is the fraction of capital in asset $i$  
+  (positive = long, negative = short; $\sum_i w_i = 1$ if fully invested)  
+- $\mu \in \mathbb{R}^N$ = expected return vector (signal)  
+- $\Sigma \in \mathbb{R}^{N \times N}$ = covariance matrix of returns estimated on the training window  
+- $\gamma$ = risk-aversion parameter  
+
+### Constraint definitions
+
+All constraints are **opt-in** via the config file. Symbols used below:
+
+- $G$ = gross exposure cap  
+- $\beta \in \mathbb{R}^N$ = single-asset betas vs market proxy  
+- $\beta_{\max}$ = max allowed absolute portfolio beta  
+- $l_i, u_i$ = lower/upper bound on asset $i$  
+- $S \in \{0,1\}^{K \times N}$ = sector-membership matrix  
+- $\Sigma_t$ = return covariance matrix at rebalance $t$  
+- $V_{t,k} \in \mathbb{R}^{N \times k}$ = top $k$ eigenvectors of $\Sigma_t$  
+- $\phi$ = cap on PCA-factor exposures  
+
+**Gross exposure cap**  
+$$
+\sum_{i=1}^N |w_i| \;\le\; G
+$$
+Prevents leverage from exceeding a fixed multiple of capital.
+
+**Market-beta limit**  
+$$
+|\beta^\top w| \;\le\; \beta_{\max}
+$$
+Caps the portfolio’s absolute beta relative to the market proxy.
+
+**Per-name bounds**  
+$$
+l_i \;\le\; w_i \;\le\; u_i, \quad \text{for all } i
+$$
+Restricts position size in each asset.
+
+**Sector neutrality**  
+$$
+S w = \mathbf{0}
+$$
+Enforces no net sector tilt (or capped neutrality if limits are set).
+
+**PCA-factor neutrality (risk-model derived)**  
+On each training window we decompose the return-covariance $\Sigma_t = V_t \Lambda_t V_t^\top$ and take the top $k$ eigenvectors $V_{t,k}$. Neutrality removes exposure to these covariance-driven factors:
+$$
+V_{t,k}^\top w = \mathbf{0} \quad \text{(hard)} 
 \qquad \text{or} \qquad 
-\lvert V_{t,k}^\top w_t \rvert \le \phi \ \text{(capped)}.
+|V_{t,k}^\top w| \le \phi \quad \text{(capped)} .
 $$
 
-This is PCA on returns–covariance (risk), not PCA on features. The number of PCs $k$ and whether neutrality is hard or capped are set in the config (e.g., `factor_neutral=True`, optional `pca_n_components`, and an exposure cap if used).  
+**Turnover / cost gate**  
+A trade is executed only if expected benefit exceeds modeled transaction costs by a buffer, to prevent churn from small rebalances.
+
+---
+
+This setup is implemented in **cvxpy**, with constraints selected according to `config.py` (e.g. `factor_neutral=True`, `gross_limit`, `beta_limit`, `transaction_cost_bps`, etc.).
+ 
 <br>
 
 ### Backtesting
@@ -99,6 +156,7 @@ We report after-cost performance over Jan 2020–Jul 2025 with a monthly rebalan
 $$
 \mathrm{NAV}_t=\mathrm{NAV}_{t-1}\,\bigl(1+r_{p,t}\bigr),\qquad \mathrm{NAV}_0=1 .
 $$
+<br>
 
 with $NAV_0$=1, where $r_{p,t}$ is the after-cost portfolio return in period *t*. The equity curve is flat through 2020–early 2021 (warm-up while sufficient history accrues), rises in mid-2021, retraces in late-2021 and late-2022 (leadership rotation and compressed cross-sectional dispersion), accelerates in late 2024–spring 2025, and pulls back in mid-2025.
 
@@ -121,10 +179,10 @@ where *s* indexes all past periods up to *t*. Two episodes dominate the sample: 
 **Figure 3** shows the 12-month rolling Sharpe ratio of excess returns, where excess return is the portfolio return minus the risk-free return (BIL) on the same month. For each month *t*, the statistic is computed over the previous 12 monthly observations as the average excess return divided by its standard deviation, then annualized by $\sqrt{12}$
 
 $$
-\text{Sharpe}^{(12\text{m})}_t
-= \frac{\overline{r^{\text{excess}}}_{\;12\text{m}}}
-{\operatorname{Std}_{\;12\text{m}}\!\bigl(r^{\text{excess}}\bigr)} \,\sqrt{12}\,,
-\quad r^{\text{excess}}_t = r_{p,t}-r_{f,t}.
+\mathrm{Sharpe}^{(12\mathrm{m})}_t
+= \frac{\overline{r^{\mathrm{excess}}}_{\,12\mathrm{m}}}
+{\sigma^{(12\mathrm{m})}_t}\,\sqrt{12},
+\qquad r^{\mathrm{excess}}_t = r_{p,t} - r_{f,t}.
 $$
 
 ![Rolling Sharpe](figures/rolling_sharpe.png)  

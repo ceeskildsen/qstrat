@@ -190,8 +190,8 @@ where *s* indexes all past periods up to *t*. Two episodes dominate the sample: 
 **Figure 3** shows the 12-month rolling Sharpe ratio of excess returns, where excess return is the portfolio return minus the risk-free return (BIL) on the same month. For each month *t*, the statistic is computed over the previous 12 monthly observations as the average excess return divided by its standard deviation, then annualized by $\sqrt{12}$
 
 $$
-\operatorname{Sharpe}^{(12\mathrm{m})}_t
-= \frac{\overline{r^{\mathrm{excess}}}_{t,12\mathrm{m}}}{\sigma_{t,12\mathrm{m}}}\,\sqrt{12},
+\mathrm{Sharpe}^{(12\mathrm{m})}_t
+= \frac{\overline{r^{\mathrm{excess}}}_{t,12\mathrm{m}}}{\sigma_{t,12\mathrm{m}}}\sqrt{12},
 \qquad r^{\mathrm{excess}}_t = r_{p,t} - r_{f,t}.
 $$
 

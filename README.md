@@ -161,6 +161,10 @@ A simple, editable sector map is provided for sector neutrality and attribution.
 *Vendor quality:* Yahoo data can include gaps/restatements; the pipeline filters catch most issues, but validate critical names.
 
 ## 3. Results at a glance
+
+> **Read this first: the results below are illustrative, not an estimate of live performance.**
+> The example universe is 50 U.S. large caps chosen with today's knowledge, and the strategy parameters were set on the same 2020–2025 period that is reported here. The curves therefore include survivorship and selection bias: much of the 2024–2025 gain comes from momentum in names that are only in the universe because they later became the largest companies. The purpose of this section is to demonstrate the pipeline and its diagnostics. The next steps are a point-in-time universe and a hold-out test with parameters fixed on pre-2020 data (see Roadmap).
+
 We report after-cost performance over Jan 2020–Jul 2025 with a monthly rebalance (64 periods).  
 
 **Figure 1** shows cumulative equity vs risk-free investment (`BIL`). We report Net Asset Value (NAV) as the cumulative product of portfolio returns,
@@ -445,6 +449,9 @@ Reduce universe size, use `rebalance_freq="monthly"`, shorten parameter grids in
 
 ## 10. Roadmap (brief)
 - Point-in-time data: add dated universe membership (index constituents by month) and optional local cache to remove survivorship bias and vendor drift.
+- Hold-out evaluation: fix all parameters on pre-2020 data and report 2020–2025 untouched, with a summary table (Sharpe ratio, t-statistic, maximum drawdown, turnover, cost sensitivity at 5/10/20 bps).
+- Gaussian process signal: compare out of sample against a linear baseline on the same features, and test whether uncertainty-scaled position sizing improves results.
+- Execution realism: trade with a one-day lag after the signal date.
 - Signals: expose additional modes (`gaussian_process` with Nyström already present → extend kernels/landmark selection); parameterized overlay; configurable `combo` weights.
 - Neutrality & scaling: robust z-scoring options; PCA/factor neutrality with per-factor rescaling so exposures represent comparable risk across PCs.
 - Risk model: richer shrinkage choices (Ledoit–Wolf variants), optional EWMA + shrink hybrid, and diagnostics for covariance quality.
